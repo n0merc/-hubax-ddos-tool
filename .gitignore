@@ -1,0 +1,55 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Sensitive data
+config.ini
+secrets.json
+*.key
+*.pem
+
+# Attack data (don't commit targets!)
+targets.txt
+victims.txt
+```
+
+## Why you need this shit:
+
+1. **Don't commit cache files** - `__pycache__/` and `*.pyc` are generated automatically
+2. **Don't commit virtual environments** - `venv/` contains installed packages
+3. **Don't commit IDE configs** - `.vscode/`, `.idea/` are personal settings
+4. **Don't commit OS junk** - `.DS_Store`, `Thumbs.db` are system files
+5. **Don't commit sensitive data** - `config.ini`, `secrets.json` might have API keys
+6. **Don't commit attack logs** - `*.log`, `targets.txt` could be used as evidence
+
+## Create the file:
+```bash
+# Create .gitignore file
+echo "# HUBaxDDOS .gitignore" > .gitignore
+echo "__pycache__/" >> .gitignore
+echo "venv/" >> .gitignore
+echo ".vscode/" >> .gitignore
+echo ".idea/" >> .gitignore
+echo "*.log" >> .gitignore
+echo "targets.txt" >> .gitignore
