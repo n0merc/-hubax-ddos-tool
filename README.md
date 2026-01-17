@@ -13,8 +13,8 @@
 
 ## Installation
 ```bash
-git clone https://github.com/anujin696969/-hubax-ddos-tool.git
-cd -hubax-ddos-tool
+git clone https://github.com/anujin696969/hubaxddos.git
+cd hubaxddos
 # No installation required - pure Python
 ```
 
