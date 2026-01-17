@@ -6,7 +6,7 @@ Only the latest version receives security updates.
 ## Reporting a Vulnerability
 **DO NOT CREATE PUBLIC ISSUES FOR SECURITY VULNERABILITIES**
 
-Email: security@example.com
+Email: anujin696969@gmail.com
 
 ## Responsible Disclosure
 We follow responsible disclosure practices.
