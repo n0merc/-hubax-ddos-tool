@@ -67,7 +67,7 @@ class HUBaxDDOS:
 ║  [5] ICMP Flood Attack     - Ping flood attack            ║
 ║  [6] Slowloris Attack      - Slow HTTP headers attack     ║
 ║  [7] DNS Amplification     - DNS reflection attack        ║
-║  [8] Multi-Vector Attack   - Combine multiple methods      ║
+║  [8] Multi-Vector Attack   - Combine multiple methods     ║
 ║  [9] Show Statistics       - Display attack stats         ║
 ║  [10] Stop All Attacks     - Stop all running attacks     ║
 ║  [11] Help                 - Show command instructions    ║
